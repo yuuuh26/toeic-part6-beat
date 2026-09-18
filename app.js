@@ -3,10 +3,10 @@
   const DATA=window.PART6_DATA;
   const $=s=>document.querySelector(s);
   const $$=s=>[...document.querySelectorAll(s)];
-  const defaults={ttsEnabled:true,ttsRate:'1',voice:'',timeLimit:'75',timeEffects:true,effectStrength:'STRONG'};
+  const defaults={ttsEnabled:true,ttsRate:'1',voice:'',timeLimit:'75',timeEffects:true,effectStrength:'STRONG',seEnabled:true,seVolume:'0.75',bgmEnabled:false,bgmVolume:'0.55',bgmTrack:''};
   const settings={...defaults,...JSON.parse(localStorage.getItem('part6-settings')||'{}')};
   const state={screen:'homeScreen',mode:'standard',doc:null,q:0,answers:[],combo:0,startedAt:0,qStartedAt:0,limit:90,timeLeft:90,timedOut:false,timer:null,history:[],recentDocs:JSON.parse(localStorage.getItem('part6-recent')||'[]')};
-  let db;
+  let db,audioCtx;
 
   function toast(message){const el=$('#toast');el.textContent=message;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2200)}
   function stopSpeech(){if('speechSynthesis'in window)speechSynthesis.cancel()}
@@ -94,7 +94,7 @@
   function bind(){
     $$('.mode-card[data-mode]').forEach(b=>b.addEventListener('click',()=>startMode(b.dataset.mode)));$('#statsBtn').addEventListener('click',()=>showScreen('statsScreen'));$('#settingsBtn').addEventListener('click',()=>showScreen('settingsScreen'));$('#backBtn').addEventListener('click',()=>{renderHome();showScreen('homeScreen')});$('#nextBtn').addEventListener('click',nextQuestion);$('#nextDocumentBtn').addEventListener('click',()=>startDocument(pickDocument()));$('#homeBtn').addEventListener('click',()=>{renderHome();showScreen('homeScreen')});
     $('#speakDocBtn').addEventListener('click',()=>speak(state.doc.body.replace(/\{\{(\d)\}\}/g,(_,i)=>completedAnswer(+i)||'blank')));$('#speakSentenceBtn').addEventListener('click',()=>speak(currentSentence()));$('#speakCompleteBtn').addEventListener('click',()=>speak(state.doc.body.replace(/\{\{(\d)\}\}/g,(_,i)=>state.doc.questions[i].options[state.doc.questions[i].answer])));
-    const controls={ttsEnabled:'ttsEnabled',ttsRate:'ttsRate',timeLimit:'timeLimit',timeEffects:'timeEffects',effectStrength:'effectStrength'};Object.entries(controls).forEach(([id,key])=>{const el=$('#'+id);if(el.type==='checkbox')el.checked=!!settings[key];else el.value=settings[key];el.addEventListener('change',()=>{settings[key]=el.type==='checkbox'?el.checked:el.value;saveSettings()})});
+    document.addEventListener('pointerdown',unlockAudio,{once:true,passive:true});\n    const controls={ttsEnabled:'ttsEnabled',ttsRate:'ttsRate',timeLimit:'timeLimit',timeEffects:'timeEffects',effectStrength:'effectStrength',seEnabled:'seEnabled',seVolume:'seVolume',bgmEnabled:'bgmEnabled',bgmVolume:'bgmVolume',bgmTrack:'bgmTrack'};Object.entries(controls).forEach(([id,key])=>{const el=$('#'+id);if(el.type==='checkbox')el.checked=!!settings[key];else el.value=settings[key];el.addEventListener('change',()=>{settings[key]=el.type==='checkbox'?el.checked:el.value;saveSettings()})});
     $('#voiceSelect').addEventListener('change',e=>{settings.voice=e.target.value;saveSettings()});$('#copyUrlBtn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(location.href);toast('コピーしました')}catch{toast('コピーできませんでした')}});$('#persistBtn').addEventListener('click',requestPersistence);$('#clearHistoryBtn').addEventListener('click',async()=>{if(!confirm('学習履歴をすべて削除しますか？'))return;try{await clearHistory();state.history=[];renderStats();toast('学習履歴を削除しました')}catch{toast('削除できませんでした')}});$('#publicUrl').textContent=location.href;
   }
   function loadVoices(){if(!('speechSynthesis'in window))return;const select=$('#voiceSelect'),voices=speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang));select.innerHTML='<option value="">端末の標準音声</option>'+voices.map(v=>`<option value="${escapeHtml(v.name)}">${escapeHtml(v.name)} (${v.lang})</option>`).join('');select.value=settings.voice}

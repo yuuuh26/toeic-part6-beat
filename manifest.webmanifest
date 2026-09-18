@@ -1,0 +1,16 @@
+{
+  "name": "TOEIC Part 6 BEAT",
+  "short_name": "Part 6 BEAT",
+  "description": "4つの判断で英文書を完成させるTOEIC Part 6専用トレーニング",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#070a16",
+  "theme_color": "#090d1b",
+  "icons": [
+    {"src":"assets/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"assets/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"assets/icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ]
+}

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090d1b">
+  <meta name="robots" content="noindex,nofollow">
+  <title>TOEIC Part 6 BEAT</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button class="icon-btn" id="backBtn" aria-label="戻る" hidden>‹</button>
+      <div class="brand"><span class="brand-six">6</span><span>PART 6 <b>BEAT</b></span></div>
+      <button class="icon-btn" id="settingsBtn" aria-label="設定">⚙</button>
+    </header>
+
+    <main>
+      <section id="homeScreen" class="screen active">
+        <div class="hero">
+          <div class="hero-kicker">DOCUMENT COMPLETION GAME</div>
+          <h1>4つの判断で、<br><em>英文書を完成させろ。</em></h1>
+          <p>文法・語彙・文脈・一文挿入。短い文書を高速で読み切る、Part 6専用トレーニング。</p>
+          <div class="hero-stats">
+            <div><strong id="homeAnswered">0</strong><span>ANSWERS</span></div>
+            <div><strong id="homeAccuracy">—</strong><span>ACCURACY</span></div>
+            <div><strong id="homeStreak">0</strong><span>STREAK</span></div>
+          </div>
+        </div>
+        <div class="mode-grid">
+          <button class="mode-card primary" data-mode="standard">
+            <span class="mode-icon">▶</span><span><b>STANDARD</b><small>時間を意識しながら、最後まで考える</small></span>
+          </button>
+          <button class="mode-card danger" data-mode="timeattack">
+            <span class="mode-icon">⚡</span><span><b>TIME ATTACK</b><small><i id="timeAttackLabel">75</i>秒で文書を完成</small></span>
+          </button>
+          <button class="mode-card" data-mode="review">
+            <span class="mode-icon">↻</span><span><b>REVIEW</b><small>間違えた文書を優先して再挑戦</small></span>
+          </button>
+          <button class="mode-card" id="statsBtn">
+            <span class="mode-icon">▥</span><span><b>RECORDS</b><small>弱点と評価ランクを分析</small></span>
+          </button>
+        </div>
+        <div class="corpus-note"><span>80 DOCUMENTS</span><span>320 QUESTIONS</span><span>600–900</span></div>
+      </section>
+
+      <section id="quizScreen" class="screen">
+        <div class="quiz-head">
+          <div><b id="docProgress">DOCUMENT 1 / 80</b><span id="questionProgress">Q 1 / 4</span></div>
+          <div class="combo" id="comboBox"><strong id="comboValue">0</strong><span>COMBO</span></div>
+        </div>
+        <div class="timer-row">
+          <span id="timerText">00:00</span>
+          <div class="timer-track"><div id="timerFill"></div></div>
+          <span id="difficultyBadge" class="badge">800</span>
+        </div>
+        <article class="document-card">
+          <div class="doc-meta"><span id="docType">E-MAIL</span><button id="speakDocBtn" class="text-btn">🔊 文書</button></div>
+          <h2 id="docTitle"></h2>
+          <div id="documentBody" class="document-body"></div>
+        </article>
+        <div id="questionType" class="question-type"></div>
+        <div id="choices" class="choices"></div>
+        <div id="feedback" class="feedback" hidden>
+          <div class="feedback-top"><b id="feedbackTitle"></b><button id="speakSentenceBtn" class="text-btn">🔊 文</button></div>
+          <p id="feedbackText"></p>
+          <details id="otherChoices"><summary>他の選択肢も確認</summary><div id="otherChoicesText"></div></details>
+          <button id="nextBtn" class="action-btn">NEXT</button>
+        </div>
+      </section>
+
+      <section id="resultScreen" class="screen">
+        <div class="result-title"><span id="resultEyebrow">DOCUMENT CLEAR</span><h2 id="resultGrade">CLEAR!</h2><p id="resultSub"></p></div>
+        <div class="result-summary">
+          <div><strong id="resultCorrect">0/4</strong><span>CORRECT</span></div>
+          <div><strong id="resultTime">0s</strong><span>TIME</span></div>
+          <div><strong id="resultBonus">—</strong><span>BONUS</span></div>
+        </div>
+        <article class="document-card completed"><div class="doc-meta"><span>COMPLETED DOCUMENT</span><button id="speakCompleteBtn" class="text-btn">🔊 全文</button></div><h2 id="completeTitle"></h2><div id="completeBody" class="document-body"></div></article>
+        <div id="reviewList" class="review-list"></div>
+        <div class="result-actions"><button id="nextDocumentBtn" class="action-btn">NEXT DOCUMENT</button><button id="homeBtn" class="ghost-btn">HOME</button></div>
+      </section>
+
+      <section id="statsScreen" class="screen">
+        <div class="section-title"><span>PERFORMANCE</span><h2>学習記録</h2></div>
+        <div id="statsOverview" class="stats-overview"></div>
+        <h3>評価ランク</h3><div id="rankStats" class="bar-list"></div>
+        <h3>問題タイプ別</h3><div id="typeStats" class="bar-list"></div>
+        <h3>難易度別</h3><div id="levelStats" class="bar-list"></div>
+        <button id="clearHistoryBtn" class="danger-outline">学習履歴を削除</button>
+      </section>
+
+      <section id="settingsScreen" class="screen">
+        <div class="section-title"><span>SETTINGS</span><h2>設定</h2></div>
+        <div class="settings-list">
+          <label><span>英文読み上げ</span><input id="ttsEnabled" type="checkbox"></label>
+          <label><span>読み上げ速度</span><select id="ttsRate"><option value="0.8">0.8×</option><option value="1">1.0×</option><option value="1.2">1.2×</option></select></label>
+          <label><span>音声</span><select id="voiceSelect"><option value="">端末の標準音声</option></select></label>
+          <label><span>Time Attack</span><select id="timeLimit"><option>45</option><option>60</option><option selected>75</option><option>90</option><option>120</option></select></label>
+          <label><span>時間警告</span><input id="timeEffects" type="checkbox"></label>
+          <label><span>正解エフェクト</span><select id="effectStrength"><option>STANDARD</option><option selected>STRONG</option><option>MAX</option></select></label>
+          <div class="setting-row"><span>永続ストレージ</span><button id="persistBtn" class="mini-btn">確認・申請</button><b id="persistStatus">未確認</b></div>
+          <div class="setting-row url-row"><span>公開URL</span><code id="publicUrl"></code><button id="copyUrlBtn" class="mini-btn">コピー</button></div>
+          <div class="setting-row"><span>アプリバージョン</span><b>v1.0.0</b></div>
+        </div>
+        <p class="privacy-note">学習履歴はこの端末内に保存され、外部へ送信されません。</p>
+      </section>
+    </main>
+
+    <footer>Made by YUU <span>•</span> v1.0.0</footer>
+  </div>
+  <div id="effectLayer" aria-hidden="true"><div id="rankBurst"></div><div id="particles"></div></div>
+  <div id="toast" role="status"></div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

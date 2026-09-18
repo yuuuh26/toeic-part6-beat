@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07152f"/><stop offset=".5" stop-color="#3530a9"/><stop offset="1" stop-color="#da38c7"/></linearGradient>
+    <linearGradient id="six" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#fff"/><stop offset=".5" stop-color="#8ff4ff"/><stop offset="1" stop-color="#b4ff55"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <path d="M104 118h218l86 86v190H104z" fill="#0a1026" opacity=".92" stroke="#71ebff" stroke-width="10"/>
+  <path d="M322 118v86h86" fill="none" stroke="#71ebff" stroke-width="10"/>
+  <path d="M151 250h211M151 306h94M311 306h51M151 362h72M291 362h71" stroke="#88a4dc" stroke-width="15" stroke-linecap="round" opacity=".75"/>
+  <text x="257" y="382" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-style="italic" font-size="302" fill="url(#six)" stroke="#11183b" stroke-width="13" paint-order="stroke" filter="url(#glow)">6</text>
+  <path d="M130 432h252" stroke="#b4ff55" stroke-width="12" stroke-linecap="round"/>
+</svg>

@@ -93,13 +93,13 @@
     buttons.forEach((b,i)=>{b.disabled=true;if(i===item.answer)b.classList.add('correct');if(i===selected&&!correct)b.classList.add('incorrect')});
     state.combo=correct?state.combo+1:0;const entry={documentId:state.doc.id,questionId:item.id,correct,selected,correctIndex:item.answer,seconds:Number(seconds.toFixed(2)),rank,difficulty:state.doc.difficulty,level:state.doc.level,type:item.type,mode:state.mode,timedOut:state.timedOut,answeredAt:new Date().toISOString()};state.answers[state.q]=entry;state.history.push(entry);
     try{await addHistory(entry)}catch(e){toast('履歴を保存できませんでした')}
-    $('#documentBody').innerHTML=renderBody();$('#feedback').hidden=false;$('#feedbackTitle').textContent=correct?`${rank} — 正解！`:'MISS — 正解を確認';$('#feedbackTitle').style.color=correct?'var(--lime)':'#ff7995';$('#feedbackText').textContent=item.explanation;$('#otherChoicesText').textContent=item.others;$('#nextBtn').textContent=state.q===3?'DOCUMENT CLEAR':'NEXT QUESTION';
+    $('#documentBody').innerHTML=renderBody();$('#feedback').hidden=false;$('#feedbackTitle').textContent=correct?`${rank} — 正解！`:'MISS — 正解を確認';$('#feedbackTitle').style.color=correct?'var(--lime)':'#ff7995';$('#feedbackText').textContent=item.explanation;$('#otherChoicesText').textContent=item.others;$('#nextBtn').textContent=state.q===3?'DOCUMENT CLEAR':'NEXT QUESTION';$('#aiAskBtn').hidden=correct;
     if(correct)playEffect(rank);else if(navigator.vibrate)navigator.vibrate(45);
   }
   function rankFor(seconds,type){const factor=type.includes('一文')?1.35:1;if(!state.timedOut&&seconds<=3.3*factor)return'PERFECT';if(!state.timedOut&&seconds<=6.5*factor)return'EXCELLENT';if(!state.timedOut&&seconds<=11*factor)return'GREAT';return'GOOD'}
   function nextQuestion(){if(!state.answers[state.q])return;if(state.q<3){state.q++;renderQuestion()}else finishDocument()}
   function finishDocument(){clearInterval(state.timer);const correct=state.answers.filter(a=>a.correct).length,totalSec=(Date.now()-state.startedAt)/1000,fast=!state.timedOut&&totalSec<=state.limit*.65;showScreen('resultScreen');$('#resultCorrect').textContent=`${correct}/4`;$('#resultTime').textContent=`${Math.round(totalSec)}s`;$('#resultBonus').textContent=fast&&correct===4?'SPEED':!state.timedOut?'TIME':'—';$('#completeTitle').textContent=state.doc.title;$('#completeBody').innerHTML=renderBody(true);const perfect=correct===4;$('#resultEyebrow').textContent=perfect?'PERFECT DOCUMENT':'DOCUMENT CLEAR';$('#resultGrade').textContent=perfect&&fast?'SPEED CLEAR!':perfect?'PERFECT!':'CLEAR!';$('#resultSub').textContent=perfect?'4つの判断で文書を完全に修復しました。':`${4-correct}問をレビューして、次の文書へ。`;
-    $('#reviewList').innerHTML='';state.doc.questions.forEach((item,i)=>{const a=state.answers[i],el=document.createElement('details');el.className='review-item';el.innerHTML=`<summary><span>Q${i+1} ${escapeHtml(item.type)}</span><b class="${a.correct?'ok':'no'}">${a.correct?a.rank:'MISS'}</b></summary><p><b>正答：</b>${escapeHtml(item.options[item.answer])}</p><p>${escapeHtml(item.explanation)}</p>`;$('#reviewList').appendChild(el)});playEffect(perfect?(fast?'SPEED BONUS':'PERFECT DOCUMENT'):'DOCUMENT CLEAR',perfect?'PERFECT':'GREAT')}
+    $('#reviewList').innerHTML='';state.doc.questions.forEach((item,i)=>{const a=state.answers[i],el=document.createElement('details');el.className='review-item';el.innerHTML=`<summary><span>Q${i+1} ${escapeHtml(item.type)}</span><b class="${a.correct?'ok':'no'}">${a.correct?a.rank:'MISS'}</b></summary><p><b>正答：</b>${escapeHtml(item.options[item.answer])}</p><p>${escapeHtml(item.explanation)}</p>`;if(!a.correct){const btn=document.createElement('button');btn.className='ai-ask-btn';btn.textContent='🤖 AIに詳しく聞く';btn.addEventListener('click',e=>{e.preventDefault();copyAiQuestion(i)});el.appendChild(btn)}$('#reviewList').appendChild(el)});playEffect(perfect?(fast?'SPEED BONUS':'PERFECT DOCUMENT'):'DOCUMENT CLEAR',perfect?'PERFECT':'GREAT')}
   function playEffect(label,rank=label){
     playSuccessSound(rank,label);
     const layer=$('#effectLayer'),burst=$('#rankBurst'),parts=$('#particles'),strength=settings.effectStrength;const base={GOOD:55,GREAT:85,EXCELLENT:125,PERFECT:175}[rank]||140;const mult=strength==='MAX'?1.35:strength==='STANDARD'?.72:1;const colors={GOOD:'#abff4f',GREAT:'#4ce6ff',EXCELLENT:'#ff4fd8',PERFECT:'#ffd75a'};const color=colors[rank]||'#ffd75a';burst.textContent=label;burst.style.color=color;parts.innerHTML='';
@@ -109,6 +109,62 @@
   }
   function speak(text){if(!settings.ttsEnabled){toast('設定で読み上げがOFFです');return}if(!('speechSynthesis'in window)){toast('この端末では読み上げを利用できません');return}stopSpeech();const u=new SpeechSynthesisUtterance(text.replace(/\{\{\d\}\}/g,' blank '));u.lang='en-US';u.rate=Number(settings.ttsRate);const voices=speechSynthesis.getVoices();const selected=voices.find(v=>v.name===settings.voice);if(selected)u.voice=selected;u.onerror=()=>toast('読み上げを開始できませんでした');speechSynthesis.speak(u)}
   function currentSentence(){const answer=state.doc.questions[state.q].options[state.doc.questions[state.q].answer];const filled=state.doc.body.replace(`{{${state.q}}}`,answer).split(/(?<=[.!?])\s+/);return filled.find(s=>s.includes(answer))||answer}
+  function buildAiPrompt(index){
+    const d=state.doc,item=d.questions[index],answer=state.answers[index];
+    const body=d.body.replace(/\{\{(\d)\}\}/g,(_,n)=>`[BLANK ${Number(n)+1}]`);
+    const options=item.options.map((o,i)=>`${'ABCD'[i]}. ${o}`).join('\n');
+    const mine=answer?item.options[answer.selected]:'（未回答）';
+    const correct=item.options[item.answer];
+    return `以下のTOEIC Part 6の問題を、英語学習者向けにできる限り詳しく解説してください。
+
+【お願いしたい内容】
+1. なぜ正解が正しいのか
+2. なぜ私の回答が不正解なのか
+3. 他の選択肢がそれぞれなぜ不適切なのか
+4. 該当文の文構造・文法・語彙・熟語の分析
+5. 前後の文脈からどう判断するのか
+6. 文書全文の自然な日本語訳
+7. 同じタイプの問題を次回見抜くためのポイント
+8. 必要なら、似た例文を2〜3個示してください
+
+【TOEIC Part 6 問題】
+文書タイプ: ${d.type}
+難易度: ${d.level || d.difficulty || ''}
+タイトル: ${d.title}
+
+--- 文書全文 ---
+${body}
+
+--- 今回の問題 ---
+Q${index+1}
+問題タイプ: ${item.type}
+
+【選択肢】
+${options}
+
+【私の回答】
+${'ABCD'[answer?.selected ?? 0]}. ${mine}
+
+【正解】
+${'ABCD'[item.answer]}. ${correct}
+
+【アプリ内の簡易解説】
+${item.explanation || 'なし'}
+
+解説では、単に答えを示すだけでなく、「この問題を自力で解けるようになる」ことを目的に、判断手順まで丁寧に説明してください。`;
+  }
+  async function copyAiQuestion(index){
+    const text=buildAiPrompt(index);
+    try{
+      if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
+      else throw new Error('clipboard unavailable');
+      toast('AI質問用にコピーしました');
+    }catch{
+      const area=document.createElement('textarea');area.value=text;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();
+      try{document.execCommand('copy');toast('AI質問用にコピーしました')}catch{toast('コピーできませんでした')}
+      area.remove();
+    }
+  }
 
   function renderStats(){
     const h=state.history,total=h.length,correct=h.filter(x=>x.correct).length,avg=total?h.reduce((s,x)=>s+x.seconds,0)/total:0,recent=h.slice(-40),recentOk=recent.filter(x=>x.correct).length;
@@ -124,7 +180,7 @@
 
   function bind(){
     $$('.mode-card[data-mode]').forEach(b=>b.addEventListener('click',()=>startMode(b.dataset.mode)));$('#statsBtn').addEventListener('click',()=>showScreen('statsScreen'));$('#settingsBtn').addEventListener('click',()=>showScreen('settingsScreen'));$('#backBtn').addEventListener('click',()=>{renderHome();showScreen('homeScreen')});$('#nextBtn').addEventListener('click',nextQuestion);$('#nextDocumentBtn').addEventListener('click',()=>startDocument(pickDocument()));$('#homeBtn').addEventListener('click',()=>{renderHome();showScreen('homeScreen')});
-    $('#speakDocBtn').addEventListener('click',()=>speak(state.doc.body.replace(/\{\{(\d)\}\}/g,(_,i)=>completedAnswer(+i)||'blank')));$('#speakSentenceBtn').addEventListener('click',()=>speak(currentSentence()));$('#speakCompleteBtn').addEventListener('click',()=>speak(state.doc.body.replace(/\{\{(\d)\}\}/g,(_,i)=>state.doc.questions[i].options[state.doc.questions[i].answer])));
+    $('#speakDocBtn').addEventListener('click',()=>speak(state.doc.body.replace(/\{\{(\d)\}\}/g,(_,i)=>completedAnswer(+i)||'blank')));$('#speakSentenceBtn').addEventListener('click',()=>speak(currentSentence()));$('#speakCompleteBtn').addEventListener('click',()=>speak(state.doc.body.replace(/\{\{(\d)\}\}/g,(_,i)=>state.doc.questions[i].options[state.doc.questions[i].answer])));$('#aiAskBtn').addEventListener('click',()=>copyAiQuestion(state.q));
     document.addEventListener('pointerdown',unlockAudio,{once:true,passive:true});
     const controls={ttsEnabled:'ttsEnabled',ttsRate:'ttsRate',timeLimit:'timeLimit',timeEffects:'timeEffects',effectStrength:'effectStrength',seEnabled:'seEnabled',seVolume:'seVolume',bgmEnabled:'bgmEnabled',bgmVolume:'bgmVolume',bgmTrack:'bgmTrack'};Object.entries(controls).forEach(([id,key])=>{const el=$('#'+id);if(el.type==='checkbox')el.checked=!!settings[key];else el.value=settings[key];el.addEventListener('change',()=>{settings[key]=el.type==='checkbox'?el.checked:el.value;saveSettings()})});
     $('#voiceSelect').addEventListener('change',e=>{settings.voice=e.target.value;saveSettings()});$('#copyUrlBtn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(location.href);toast('コピーしました')}catch{toast('コピーできませんでした')}});$('#persistBtn').addEventListener('click',requestPersistence);$('#clearHistoryBtn').addEventListener('click',async()=>{if(!confirm('学習履歴をすべて削除しますか？'))return;try{await clearHistory();state.history=[];renderStats();toast('学習履歴を削除しました')}catch{toast('削除できませんでした')}});$('#publicUrl').textContent=location.href;

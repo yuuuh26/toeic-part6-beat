@@ -10,6 +10,7 @@
   <link rel="icon" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="bgm.css">
 </head>
 <body>
   <div id="app">
@@ -105,22 +106,31 @@
           <label><span>正解エフェクト</span><select id="effectStrength"><option>STANDARD</option><option selected>STRONG</option><option>MAX</option></select></label>
           <label><span>正解SE</span><input id="seEnabled" type="checkbox"></label>
           <label><span>SE音量</span><input id="seVolume" type="range" min="0" max="1" step="0.05" value="0.75"></label>
-          <label><span>BGM</span><input id="bgmEnabled" type="checkbox" disabled></label>
-          <label><span>BGM曲</span><select id="bgmTrack" disabled><option value="">音源追加後に有効</option></select></label>
-          <label><span>BGM音量</span><input id="bgmVolume" type="range" min="0" max="1" step="0.05" value="0.55" disabled></label>
+          <label><span>BGM</span><input id="bgmEnabled" type="checkbox"></label>
+          <label><span>BGM曲</span><select id="bgmTrack"><option value="">音源未登録</option></select></label>
+          <label><span>BGM音量</span><input id="bgmVolume" type="range" min="0" max="1" step="0.05" value="0.35"></label>
+          <div class="setting-row">
+            <span>BGM音源</span>
+            <div class="setting-actions"><button id="bgmImportBtn" class="mini-btn">曲を追加</button><button id="bgmTestBtn" class="mini-btn" disabled>▶ 試聴</button></div>
+            <b id="bgmStatus">0曲</b>
+            <input id="bgmFileInput" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.opus,.webm" multiple hidden>
+            <p class="bgm-note">複数曲を一括選択できます。音源はこの端末内に保存され、外部へ送信されません。</p>
+          </div>
+          <div class="setting-row"><span>BGM管理</span><button id="bgmClearBtn" class="mini-btn bgm-danger" disabled>全削除</button></div>
           <div class="setting-row"><span>永続ストレージ</span><button id="persistBtn" class="mini-btn">確認・申請</button><b id="persistStatus">未確認</b></div>
           <div class="setting-row url-row"><span>公開URL</span><code id="publicUrl"></code><button id="copyUrlBtn" class="mini-btn">コピー</button></div>
-          <div class="setting-row"><span>アプリバージョン</span><b>v1.1.0</b></div>
+          <div class="setting-row"><span>アプリバージョン</span><b>v1.2.0</b></div>
         </div>
-        <p class="privacy-note">学習履歴はこの端末内に保存され、外部へ送信されません。</p>
+        <p class="privacy-note">学習履歴と登録BGMはこの端末内に保存され、外部へ送信されません。</p>
       </section>
     </main>
 
-    <footer>Made by YUU <span>•</span> v1.1.0</footer>
+    <footer>Made by YUU <span>•</span> v1.2.0</footer>
   </div>
   <div id="effectLayer" aria-hidden="true"><div id="rankBurst"></div><div id="particles"></div></div>
   <div id="toast" role="status"></div>
   <script src="data.js"></script>
   <script src="app.js"></script>
+  <script src="bgm.js"></script>
 </body>
 </html>
